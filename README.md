@@ -114,6 +114,62 @@ The water-level information is displayed on the **Wokwi Serial Monitor** using U
 
 ## Program
 
+#include "main.h"
+
+/* Relay and water level sensor pins
+   Change these according to your STM32 board */
+
+#define PUMP_RELAY_PIN     GPIO_PIN_0
+#define PUMP_RELAY_PORT    GPIOB
+
+#define LOW_LEVEL_PIN      GPIO_PIN_1
+#define LOW_LEVEL_PORT     GPIOB
+
+#define HIGH_LEVEL_PIN     GPIO_PIN_2
+#define HIGH_LEVEL_PORT    GPIOB
+
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+
+int main(void)
+{
+    HAL_Init();
+    SystemClock_Config();
+    MX_GPIO_Init();
+
+    /* Initially turn OFF pump */
+    HAL_GPIO_WritePin(PUMP_RELAY_PORT,
+                      PUMP_RELAY_PIN,
+                      GPIO_PIN_RESET);
+
+    while (1)
+    {
+        /* Check HIGH level */
+        if (HAL_GPIO_ReadPin(HIGH_LEVEL_PORT, HIGH_LEVEL_PIN)
+            == GPIO_PIN_SET)
+        {
+            /* Tank is full → Pump OFF */
+            HAL_GPIO_WritePin(PUMP_RELAY_PORT,
+                              PUMP_RELAY_PIN,
+                              GPIO_PIN_RESET);
+        }
+
+        /* Check LOW level */
+        else if (HAL_GPIO_ReadPin(LOW_LEVEL_PORT, LOW_LEVEL_PIN)
+                 == GPIO_PIN_RESET)
+        {
+            /* Water level is low → Pump ON */
+            HAL_GPIO_WritePin(PUMP_RELAY_PORT,
+                              PUMP_RELAY_PIN,
+                              GPIO_PIN_SET);
+        }
+
+        HAL_Delay(100);
+    }
+}
+
+
+
 
 ## Circuit Connections
 
@@ -176,6 +232,8 @@ GND  ---| GND                |
 ---
 
 ## Expected Output
+<img width="912" height="749" alt="Screenshot 2026-08-19 114220" src="https://github.com/user-attachments/assets/75cc922b-9b98-4540-8fe7-e477de1b4809" />
+
 
 ### Low Water Level
 
@@ -222,6 +280,7 @@ The STM32 then classifies the water level as:
 The ADC value, percentage, and water-level status are transmitted through **USART2** and displayed on the **Wokwi Serial Monitor**.
 
 ---
+
 
 ## Result
 
